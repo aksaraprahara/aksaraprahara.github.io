@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404 - Halaman Tidak Ditemukan" description="Halaman yang kamu cari tidak tersedia atau sudah berpindah.">
+  <div class="flex flex-col items-center justify-center text-center min-h-[80vh] py-16 md:py-24">
+    <h1 class="text-6xl md:text-8xl font-bold text-gray-900 mb-4">404</h1>
+    <h2 class="text-2xl md:text-3xl font-medium text-gray-700 dark:text-gray-200 mb-8">Halaman Tidak Ditemukan</h2>
+    <p class="text-gray-600 max-w-md mb-10">
+      Halaman yang kamu cari tidak tersedia atau mungkin sudah dipindahkan ke lokasi lain.
+    </p>
+    <a href="/" class="text-lg font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 py-2 px-4 rounded-md inline-block text-black">
+      Kembali ke Beranda <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</BaseLayout>

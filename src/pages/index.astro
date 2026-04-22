@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostList from '../components/PostList.astro';
+import { getCollection } from 'astro:content';
+import { getVisiblePosts } from '../utils/posts';
+
+// Get all blog posts and sort them by date
+const sortedPosts = getVisiblePosts(await getCollection('posts'));
+
+// Show up to 5 posts on the frontpage
+const posts = sortedPosts.slice(0, 5).map(post => ({
+  ...post,
+  url: `/posts/${post.id}`,
+  frontmatter: post.data
+}));
+---
+
+<BaseLayout title="Beranda">
+  <div class="max-w-4xl mx-auto">
+    <section class="py-[8vh] text-left" transition:animate="fade">
+      <h1 class="mb-8 w-full max-w-4xl">
+        <span class="sr-only">He was trembling like a soaked crow in the winter wind</span>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 1450 520"
+          class="block w-full h-auto overflow-visible text-gray-950 dark:text-white"
+        >
+          <text
+            x="0"
+            y="135"
+            fill="currentColor"
+            class="font-gunplay hero-poster-text"
+            style="font-family: 'Gunplay', sans-serif; font-size: 118px; letter-spacing: 0.02em;"
+          >
+            <tspan x="0" dy="0">He was trembling</tspan>
+            <tspan x="0" dy="112">like a soaked</tspan>
+            <tspan x="0" dy="112">crow in the winter wind</tspan>
+          </text>
+
+          <image
+            href="/images/crow.png"
+            x="940"
+            y="-120"
+            width="470"
+            height="470"
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </svg>
+      </h1>
+
+      <p class="mb-10 max-w-2xl text-lg italic leading-relaxed text-gray-500 md:text-2xl">
+        De fleste mennesker lærer å redde seg selv ved kunstig å redusere sitt bevisshetsinnhold.
+        <br />
+        <span class="mt-4 block text-sm not-italic tracking-[0.02em] text-gray-400 md:text-base">
+          - Peter Wessel Zapffe, <em>Den sidste Messias</em> (1933)
+        </span>
+      </p>
+      <div class="flex flex-col items-start justify-start gap-4 sm:flex-row">
+        <a href="/journal" class="btn-primary btn-lg tracking-wide no-underline hover:no-underline transform transition-all duration-300 hover:scale-105 hover:shadow-[0_3.5rem_5rem_rgba(21,21,21,0.3)] shadow-[0_3rem_4rem_rgba(21,21,21,0.25)] dark:bg-white dark:text-black dark:hover:bg-gray-100">
+          Lihat Semua Artikel
+        </a>
+      </div>
+    </section>
+
+    <section class="mx-auto" transition:animate="fade">
+      <PostList posts={posts} showImages={false} showExcerpt={true} showSeparators={true} showTags={true} title="Tulisan Terbaru" />
+
+      <div class="text-center mt-24">
+        <a href="/journal" class="text-lg font-medium text-black dark:text-white py-2 px-4 rounded-md inline-block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:underline">
+          Lihat Semua Artikel <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

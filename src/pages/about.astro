@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import WritingActivityCalendar from '../components/WritingActivityCalendar.astro';
+import { getVisiblePosts } from '../utils/posts';
+
+const posts = getVisiblePosts(await getCollection('posts'));
+---
+
+<BaseLayout title="Tentang">
+  <div class="max-w-5xl mx-auto">
+    <div class="max-w-3xl mx-auto">
+      <header class="mb-12 text-center" transition:animate="fade">
+        <h1 class="text-5xl mb-4">Tentang</h1>
+        <p class="text-xl text-gray-500">
+          Profil singkat dan fokus tulisan di blog ini.
+        </p>
+      </header>
+      
+      <div class="prose prose-lg dark:prose-invert max-w-none" transition:animate="fade">
+        <p>
+          Saya menggunakan blog ini untuk menyimpan catatan teknikal yang praktis dan bisa langsung dipakai saat bekerja.
+          Topik utamanya berkisar pada Linux, Docker, observability, storage, virtualisasi, dan hal-hal operasional
+          yang sering muncul di lingkungan infrastruktur.
+        </p>
+        
+        <h2>Fokus Topik</h2>
+        
+        <ul>
+          <li>Linux administration dan command line workflow</li>
+          <li>Container dan deployment dengan Docker</li>
+          <li>Monitoring dengan Prometheus dan Grafana</li>
+          <li>Storage dan cluster seperti Ceph</li>
+          <li>Virtualisasi dan operasional sistem</li>
+        </ul>
+        
+        <h2>Gaya Penulisan</h2>
+        
+        <p>
+          Sebagian besar artikel ditulis dengan pola tutorial langkah demi langkah: konteks singkat, prasyarat,
+          perintah yang perlu dijalankan, lalu verifikasi hasil. Saya sengaja mempertahankan format yang dekat dengan
+          workflow sehari-hari agar enak dipakai kembali sebagai referensi kerja.
+        </p>
+        
+        <h2>Sumber Tulisan</h2>
+        
+        <p>
+          Untuk preview ini, beberapa artikel saya ambil dan adaptasi dari tulisan saya di
+          <a href="https://yudiwiratama.medium.com/" target="_blank" rel="noopener noreferrer"> Medium</a>,
+          lalu saya susun ulang agar nyaman dilihat langsung di blog Astro ini. Kamu bisa buka halaman
+          <a href="/journal"> Artikel</a> untuk melihat semuanya.
+        </p>
+      </div>
+    </div>
+
+    <WritingActivityCalendar posts={posts} />
+  </div>
+</BaseLayout>

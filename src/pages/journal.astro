@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostListWithThumbnails from '../components/PostListWithThumbnails.astro';
+import { getCollection } from 'astro:content';
+import { getVisiblePosts } from '../utils/posts';
+
+// Get all blog posts and sort them by date
+const sortedPosts = getVisiblePosts(await getCollection('posts'));
+
+// Format posts for the PostList component
+const posts = sortedPosts.map(post => ({
+  ...post,
+  url: `/posts/${post.id}`,
+  frontmatter: post.data
+}));
+---
+
+<BaseLayout title="Artikel">
+  <div class="max-w-3xl mx-auto">
+    <header class="mb-12 text-center" transition:animate="fade">
+      <h1 class="text-5xl mb-4">Artikel</h1>
+      <p class="text-xl text-gray-500">
+        Kumpulan catatan teknikal tentang Linux, container, monitoring, storage, dan operasional infrastruktur.
+      </p>
+    </header>
+
+    <div transition:animate="fade">
+      <PostListWithThumbnails posts={posts} showTags={true} title="Semua Artikel" />
+    </div>
+  </div>
+</BaseLayout>

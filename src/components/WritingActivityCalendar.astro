@@ -1,0 +1,287 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'posts'>[];
+}
+
+interface ActivityDay {
+  date: string;
+  count: number;
+  titles: string[];
+}
+
+const { posts } = Astro.props;
+const activeYearButtonClass =
+  'shrink-0 rounded-md border border-gray-900 bg-gray-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors dark:border-white dark:bg-white dark:text-gray-950 sm:text-sm lg:w-full';
+const inactiveYearButtonClass =
+  'shrink-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-800 dark:bg-black dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-100 sm:text-sm lg:w-full';
+
+function normalizeDate(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function formatISODate(date: Date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date: Date, amount: number) {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + amount);
+  return next;
+}
+
+function startOfWeek(date: Date) {
+  return addDays(date, -date.getUTCDay());
+}
+
+function endOfWeek(date: Date) {
+  return addDays(date, 6 - date.getUTCDay());
+}
+
+function weekIndexFrom(start: Date, target: Date) {
+  const diff = target.getTime() - start.getTime();
+  return Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
+}
+
+function levelForCount(count: number) {
+  if (count <= 0) return 0;
+  if (count === 1) return 1;
+  if (count === 2) return 2;
+  if (count === 3) return 3;
+  return 4;
+}
+
+function levelClass(level: number) {
+  if (level === 0) return 'bg-gray-100 dark:bg-gray-900';
+  if (level === 1) return 'bg-blue-100 dark:bg-blue-950';
+  if (level === 2) return 'bg-blue-200 dark:bg-blue-900';
+  if (level === 3) return 'bg-blue-400 dark:bg-blue-700';
+  return 'bg-blue-600 dark:bg-blue-500';
+}
+
+const postsByYear = new Map<number, Map<string, ActivityDay>>();
+
+for (const post of posts) {
+  const date = normalizeDate(new Date(post.data.date));
+  const year = date.getUTCFullYear();
+  const isoDate = formatISODate(date);
+  const yearlyActivity = postsByYear.get(year) ?? new Map<string, ActivityDay>();
+  const existing = yearlyActivity.get(isoDate);
+
+  if (existing) {
+    existing.count += 1;
+    existing.titles.push(post.data.title);
+  } else {
+    yearlyActivity.set(isoDate, {
+      date: isoDate,
+      count: 1,
+      titles: [post.data.title],
+    });
+  }
+
+  postsByYear.set(year, yearlyActivity);
+}
+
+const years = [...postsByYear.keys()].sort((a, b) => b - a);
+const monthFormatter = new Intl.DateTimeFormat('id-ID', { month: 'short', timeZone: 'UTC' });
+const dayFormatter = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+const calendars = years.map((year) => {
+  const firstDay = new Date(Date.UTC(year, 0, 1));
+  const lastDay = new Date(Date.UTC(year, 11, 31));
+  const gridStart = startOfWeek(firstDay);
+  const gridEnd = endOfWeek(lastDay);
+  const activityMap = postsByYear.get(year) ?? new Map<string, ActivityDay>();
+  const weeks: Array<Array<ActivityDay | null>> = [];
+  let cursor = new Date(gridStart);
+
+  while (cursor <= gridEnd) {
+    const week: Array<ActivityDay | null> = [];
+
+    for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+      if (cursor.getUTCFullYear() === year) {
+        week.push(activityMap.get(formatISODate(cursor)) ?? {
+          date: formatISODate(cursor),
+          count: 0,
+          titles: [],
+        });
+      } else {
+        week.push(null);
+      }
+
+      cursor = addDays(cursor, 1);
+    }
+
+    weeks.push(week);
+  }
+
+  const monthLabels = Array.from({ length: 12 }, (_, month) => {
+    const monthStart = new Date(Date.UTC(year, month, 1));
+    return {
+      label: monthFormatter.format(monthStart),
+      weekIndex: weekIndexFrom(gridStart, startOfWeek(monthStart)),
+    };
+  });
+
+  const totalCount = [...activityMap.values()].reduce((sum, activity) => sum + activity.count, 0);
+
+  return {
+    year,
+    weeks,
+    monthLabels,
+    totalCount,
+  };
+});
+
+const currentYear = calendars[0]?.year;
+---
+
+{
+  calendars.length > 0 && (
+    <section class="mt-20" transition:animate="fade">
+      <div data-writing-activity-root class="lg:flex lg:items-start lg:gap-4">
+        <div class="relative min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:p-8 dark:border-gray-800 dark:bg-black">
+          <div class="flex flex-col gap-6">
+            <div>
+              <h2 class="text-2xl font-semibold tracking-tight text-gray-950 dark:text-white">
+                Aktivitas Menulis
+              </h2>
+              <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                Jejak artikel yang sudah ditulis di blog ini, ditampilkan dalam bentuk kalender aktivitas per tahun.
+              </p>
+            </div>
+
+            {calendars.map((calendar) => (
+              <div
+                data-writing-activity-panel={calendar.year}
+                class={calendar.year === currentYear ? '' : 'hidden'}
+              >
+                <div class="w-full overflow-x-auto pb-1">
+                  <div class="w-max min-w-full [--activity-cell:0.625rem] [--activity-gap:0.1875rem] sm:[--activity-cell:0.75rem] sm:[--activity-gap:0.25rem]">
+                    <div
+                      class="mb-3 grid gap-[var(--activity-gap)] text-[10px] text-gray-500 dark:text-gray-400 sm:text-[11px]"
+                      style={`grid-template-columns: repeat(${calendar.weeks.length}, minmax(0, var(--activity-cell)));`}
+                    >
+                      {calendar.monthLabels.map((month) => (
+                        <span style={`grid-column: ${month.weekIndex + 1} / span 4;`}>
+                          {month.label}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div
+                      class="grid gap-[var(--activity-gap)]"
+                      style={`grid-template-columns: repeat(${calendar.weeks.length}, minmax(0, var(--activity-cell))); grid-template-rows: repeat(7, minmax(0, var(--activity-cell)));`}
+                    >
+                      {calendar.weeks.map((week, weekIndex) =>
+                        week.map((activity, dayIndex) => {
+                          if (!activity) {
+                            return (
+                              <span
+                                class="h-[var(--activity-cell)] w-[var(--activity-cell)] rounded-[2px] opacity-0"
+                                style={`grid-column: ${weekIndex + 1}; grid-row: ${dayIndex + 1};`}
+                              ></span>
+                            );
+                          }
+
+                          const countLabel = activity.count === 1 ? '1 tulisan' : `${activity.count} tulisan`;
+                          const titleLabel = activity.titles.length > 0 ? `: ${activity.titles.join(', ')}` : '';
+
+                          return (
+                            <span
+                              class={`h-[var(--activity-cell)] w-[var(--activity-cell)] rounded-[2px] ring-1 ring-black/5 dark:ring-white/5 ${levelClass(levelForCount(activity.count))}`}
+                              style={`grid-column: ${weekIndex + 1}; grid-row: ${dayIndex + 1};`}
+                              title={`${countLabel} pada ${dayFormatter.format(new Date(`${activity.date}T00:00:00Z`))}${titleLabel}`}
+                            ></span>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-5 flex flex-col gap-y-3 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between dark:text-gray-400">
+                  <div class="flex items-center gap-[3px]">
+                    <span class="mr-1.5">Lebih sedikit</span>
+                    {[0, 1, 2, 3, 4].map((level) => (
+                      <span class={`h-3 w-3 shrink-0 rounded-[2px] ring-1 ring-black/5 dark:ring-white/5 ${levelClass(level)}`}></span>
+                    ))}
+                    <span class="ml-1.5">Lebih banyak</span>
+                  </div>
+
+                  <div>{calendar.totalCount} tulisan pada {calendar.year}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {
+          calendars.length > 1 && (
+            <div class="mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 lg:mt-0 lg:w-20 lg:shrink-0 lg:flex-col lg:items-stretch lg:overflow-visible lg:pb-0" data-writing-activity-selector>
+              {calendars.map((calendar) => (
+                <button
+                  type="button"
+                  data-writing-activity-button={calendar.year}
+                  data-active={calendar.year === currentYear ? 'true' : 'false'}
+                  class={calendar.year === currentYear ? activeYearButtonClass : inactiveYearButtonClass}
+                >
+                  {calendar.year}
+                </button>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </section>
+  )
+}
+
+<script>
+  function initWritingActivity() {
+    const activeYearButtonClass =
+      'shrink-0 rounded-md border border-gray-900 bg-gray-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors dark:border-white dark:bg-white dark:text-gray-950 sm:text-sm lg:w-full';
+    const inactiveYearButtonClass =
+      'shrink-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 dark:border-gray-800 dark:bg-black dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-100 sm:text-sm lg:w-full';
+
+    document.querySelectorAll('[data-writing-activity-root]').forEach((root) => {
+      if (root.dataset.bound === 'true') return;
+
+      const buttons = Array.from(root.querySelectorAll('[data-writing-activity-button]'));
+      const panels = Array.from(root.querySelectorAll('[data-writing-activity-panel]'));
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const selectedYear = button.getAttribute('data-writing-activity-button');
+
+          buttons.forEach((item) => {
+            const isActive = item === button;
+            item.dataset.active = isActive ? 'true' : 'false';
+            item.className = isActive
+              ? activeYearButtonClass
+              : inactiveYearButtonClass;
+          });
+
+          panels.forEach((panel) => {
+            const panelYear = panel.getAttribute('data-writing-activity-panel');
+            panel.classList.toggle('hidden', panelYear !== selectedYear);
+          });
+        });
+      });
+
+      root.dataset.bound = 'true';
+    });
+  }
+
+  initWritingActivity();
+  document.addEventListener('astro:after-swap', initWritingActivity);
+</script>

@@ -1,0 +1,62 @@
+---
+export interface Props {
+  tabs: string[];
+}
+
+const { tabs } = Astro.props;
+---
+
+<div class="tabs-container">
+  <div class="tab-triggers" role="tablist" aria-label="Command variants">
+    {
+      tabs.map((tab, index) => (
+        <button
+          type="button"
+          class="tab-trigger"
+          role="tab"
+          aria-selected={index === 0 ? 'true' : 'false'}
+        >
+          {tab}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="tab-panels">
+    <slot />
+  </div>
+</div>
+
+<script>
+  function initTabs() {
+    const containers = document.querySelectorAll('.tabs-container');
+
+    containers.forEach((container) => {
+      if (container.dataset.tabsBound === 'true') return;
+
+      const triggers = Array.from(container.querySelectorAll('.tab-trigger'));
+      const panels = Array.from(container.querySelector('.tab-panels')?.children ?? []);
+
+      panels.forEach((panel, index) => {
+        if (index !== 0) {
+          panel.setAttribute('hidden', 'true');
+        }
+      });
+
+      triggers.forEach((trigger, index) => {
+        trigger.addEventListener('click', () => {
+          triggers.forEach((item) => item.setAttribute('aria-selected', 'false'));
+          panels.forEach((panel) => panel.setAttribute('hidden', 'true'));
+
+          trigger.setAttribute('aria-selected', 'true');
+          panels[index]?.removeAttribute('hidden');
+        });
+      });
+
+      container.dataset.tabsBound = 'true';
+    });
+  }
+
+  initTabs();
+  document.addEventListener('astro:after-swap', initTabs);
+</script>

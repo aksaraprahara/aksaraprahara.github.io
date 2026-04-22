@@ -1,0 +1,39 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+import { getVisiblePosts } from '../../utils/posts';
+
+// Generate static paths for all posts
+export async function getStaticPaths() {
+  const sortedPosts = getVisiblePosts(await getCollection('posts'));
+
+  return sortedPosts.map((entry, index) => {
+    const prevPost = sortedPosts[index - 1]
+      ? {
+          url: `/posts/${sortedPosts[index - 1].id}`,
+          title: sortedPosts[index - 1].data.title
+        }
+      : null;
+
+    const nextPost = sortedPosts[index + 1]
+      ? {
+          url: `/posts/${sortedPosts[index + 1].id}`,
+          title: sortedPosts[index + 1].data.title
+        }
+      : null;
+
+    return {
+      params: { slug: entry.id },
+      props: { entry, prevPost, nextPost },
+    };
+  });
+}
+
+// Get the post and navigation data for this page
+const { entry, prevPost, nextPost } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<PostLayout frontmatter={entry.data} prevPost={prevPost} nextPost={nextPost}>
+  <Content />
+</PostLayout>

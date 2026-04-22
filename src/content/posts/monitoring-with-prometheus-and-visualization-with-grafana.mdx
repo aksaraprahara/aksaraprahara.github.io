@@ -1,0 +1,190 @@
+---
+title: "Monitoring with Prometheus and Visualization with Grafana"
+date: 2023-04-24
+excerpt: "Tutorial dasar menyiapkan Prometheus, Grafana, dan Node Exporter di Ubuntu 22.04 untuk kebutuhan monitoring server."
+image: "https://cdn-images-1.medium.com/max/1024/0*xI3zq3hDUv0e2nAw"
+tags: [monitoring, grafana, prometheus, observability]
+---
+
+import Tabs from '../../components/ui/Tabs.astro'
+import Steps from '../../components/ui/Steps.astro'
+
+_Adaptasi preview dari tulisan asli di [Medium](https://yudiwiratama.medium.com/monitoring-with-prometheus-and-visualization-with-grafana-23c9c1a6e2c7?source=rss-673404229d19------2)._
+
+Artikel ini membahas setup monitoring environment sederhana di Ubuntu 22.04 menggunakan Prometheus sebagai time-series database dan Grafana sebagai visualisasi.
+
+## Quick Install Commands
+
+Kalau kamu hanya butuh ringkasan command inti, section ini bisa dipakai seperti `Interactive Installation Guides` pada docs modern: pindah komponen tanpa perlu scroll terlalu jauh.
+
+<Tabs tabs={['Prometheus', 'Grafana', 'Node Exporter']}>
+  <div>
+
+```bash
+sudo useradd --no-create-home --shell /bin/false prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.43.0/prometheus-2.43.0.linux-amd64.tar.gz
+tar -xzvf prometheus-2.43.0.linux-amd64.tar.gz
+sudo cp prometheus-2.43.0.linux-amd64/prometheus /usr/local/bin/prometheus
+```
+
+  </div>
+  <div>
+
+```bash
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+sudo apt update
+sudo apt install -y grafana
+sudo systemctl enable --now grafana-server
+```
+
+  </div>
+  <div>
+
+```bash
+sudo useradd --no-create-home --shell /bin/false node_exporter
+wget https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz
+tar -xzvf node_exporter-1.5.0.linux-amd64.tar.gz
+sudo cp node_exporter-1.5.0.linux-amd64/node_exporter /usr/local/bin/node_exporter
+```
+
+  </div>
+</Tabs>
+
+## Langkah Setup
+
+<Steps>
+  <div>
+    <h3>Step 1: Install binary Prometheus</h3>
+    <p>Mulai dari membuat user service lalu download binary Prometheus agar proses berjalan dengan user non-login yang terpisah.</p>
+
+```bash
+sudo useradd --no-create-home --shell /bin/false prometheus
+wget https://github.com/prometheus/prometheus/releases/download/v2.43.0/prometheus-2.43.0.linux-amd64.tar.gz
+tar -xzvf prometheus-2.43.0.linux-amd64.tar.gz
+sudo cp prometheus-2.43.0.linux-amd64/prometheus /usr/local/bin/prometheus
+```
+
+<p>Setelah binary siap, buat direktori konfigurasi dan data.</p>
+
+```bash
+sudo mkdir -p /etc/prometheus
+sudo mkdir -p /var/lib/prometheus
+sudo chown prometheus:prometheus /var/lib/prometheus
+```
+  </div>
+
+  <div>
+    <h3>Step 2: Tambahkan konfigurasi Prometheus dan unit file</h3>
+    <p>Gunakan konfigurasi minimal dulu agar service cepat hidup dan mudah diverifikasi.</p>
+
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - localhost:9090
+```
+
+<p>Lalu buat unit file systemd untuk Prometheus.</p>
+
+```ini
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+  --config.file /etc/prometheus/prometheus.yml \
+  --storage.tsdb.path /var/lib/prometheus/ \
+  --web.enable-admin-api \
+  --web.enable-lifecycle
+
+[Install]
+WantedBy=multi-user.target
+```
+
+<p>Reload systemd dan aktifkan servicenya.</p>
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now prometheus
+sudo systemctl status prometheus
+```
+  </div>
+
+  <div>
+    <h3>Step 3: Install Grafana</h3>
+    <p>Grafana dipakai untuk visualisasi metric dari Prometheus. Di Ubuntu, cara paling praktis adalah lewat repository resmi.</p>
+
+```bash
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+sudo apt update
+sudo apt install -y grafana
+sudo systemctl daemon-reload
+sudo systemctl enable --now grafana-server
+```
+
+<p>Secara default Grafana tersedia di port <code>3000</code> dengan credential awal <code>admin / admin</code>.</p>
+  </div>
+
+  <div>
+    <h3>Step 4: Tambahkan Node Exporter</h3>
+    <p>Node Exporter mengirim metric host seperti CPU, memory, filesystem, dan network ke Prometheus.</p>
+
+```bash
+sudo useradd --no-create-home --shell /bin/false node_exporter
+wget https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz
+tar -xzvf node_exporter-1.5.0.linux-amd64.tar.gz
+sudo cp node_exporter-1.5.0.linux-amd64/node_exporter /usr/local/bin/node_exporter
+```
+
+<p>Buat unit file agar service bisa dikelola dengan systemd.</p>
+
+```ini
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+```
+
+<p>Lalu jalankan servicenya.</p>
+
+```bash
+sudo systemctl enable --now node_exporter
+sudo systemctl status node_exporter
+```
+  </div>
+
+  <div>
+    <h3>Step 5: Verifikasi endpoint dan hubungkan ke Grafana</h3>
+    <p>Kalau semua service aktif, pastikan endpoint utamanya bisa diakses dan tambahkan Prometheus sebagai data source di Grafana.</p>
+
+```text
+Prometheus: http://localhost:9090
+Grafana: http://localhost:3000
+Node Exporter metrics: http://localhost:9100/metrics
+```
+
+  </div>
+</Steps>
+
+Setelah semua service aktif, akses Prometheus di `:9090` dan Grafana di `:3000`, lalu tambahkan Prometheus sebagai data source di Grafana untuk mulai membuat dashboard.
