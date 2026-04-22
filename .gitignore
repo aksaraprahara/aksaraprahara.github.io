@@ -26,7 +26,7 @@ localhost_*.report.html
 # jetbrains setting folder
 .idea/
 
-# docs
+# docs or md
 README.md
 how-to-write.md
 github-pages.md
