@@ -1,12 +1,17 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import PostNavigation from '../components/PostNavigation.astro';
+import AuthorBadge from '../components/AuthorBadge.astro';
 import { formatDate } from '../utils/date';
 import { optimizeImagePath } from '../utils/optimizeImagePath';
+import { getAuthorAvatar, getAuthorHref, getAuthorName } from '../utils/authors';
 
 const { frontmatter, headings, prevPost, nextPost } = Astro.props;
 const { title, date, tags, image, excerpt } = frontmatter;
 const slug = Astro.url.pathname.split('/').filter(Boolean).pop();
+const articleAuthor = getAuthorName(frontmatter);
+const articleAuthorAvatar = getAuthorAvatar(articleAuthor);
+const articleAuthorHref = getAuthorHref(articleAuthor);
 
 // Ensure image path is optimized
 const optimizedImagePath = image ? optimizeImagePath(image) : null;
@@ -28,11 +33,16 @@ const publishDate = new Date(date);
   image={optimizedImagePath || image}
   type="article"
   publishedDate={publishDate}
+  author={articleAuthor}
 >
   <article id="main-content">
     <header class="max-w-3xl mx-auto mb-10">
-      <div class="text-gray-500 text-sm mb-2">
-        <time datetime={publishDate.toISOString()}>{formatDate(date)}</time> • <span aria-label={`${readingTime} menit baca`}>{readingTime} menit baca</span>
+      <div class="mb-3 flex flex-wrap items-center gap-2 text-gray-500 text-sm">
+        <time datetime={publishDate.toISOString()}>{formatDate(date)}</time>
+        <span aria-hidden="true">•</span>
+        <span aria-label={`${readingTime} menit baca`}>{readingTime} menit baca</span>
+        <span aria-hidden="true">•</span>
+        <AuthorBadge name={articleAuthor} avatar={articleAuthorAvatar} href={articleAuthorHref} />
       </div>
       <h1 class="text-5xl mb-6" transition:name={`title-${slug}`}>{title}</h1>
       {excerpt && <p class="text-xl text-gray-500">{excerpt}</p>}

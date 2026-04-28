@@ -1,0 +1,69 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
+import AuthorBadge from '../../components/AuthorBadge.astro';
+import { getAuthorAvatar, getAuthorBio, getAuthorName, slugifyAuthor } from '../../utils/authors';
+import { getVisiblePosts } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const allPosts = getVisiblePosts(await getCollection('posts'));
+  const authorMap = new Map();
+
+  allPosts.forEach((post) => {
+    const authorName = getAuthorName(post.data);
+    const authorSlug = slugifyAuthor(authorName);
+
+    if (!authorMap.has(authorSlug)) {
+      authorMap.set(authorSlug, {
+        authorName,
+        authorAvatar: getAuthorAvatar(authorName),
+        authorBio: getAuthorBio(authorName),
+        posts: [],
+      });
+    }
+
+    authorMap.get(authorSlug).posts.push(post);
+  });
+
+  return [...authorMap.entries()].map(([author, value]) => ({
+    params: { author },
+    props: value,
+  }));
+}
+
+const { authorName, authorAvatar, authorBio, posts } = Astro.props;
+const sortedPosts = getVisiblePosts(posts);
+const formattedPosts = sortedPosts.map((post) => ({
+  ...post,
+  url: `/posts/${post.id}`,
+  frontmatter: post.data,
+}));
+---
+
+<BaseLayout title={`Catatan oleh ${authorName}`}>
+  <div class="max-w-3xl mx-auto">
+    <header class="mb-12 text-center">
+      <div class="mb-5 flex justify-center">
+        <AuthorBadge name={authorName} avatar={authorAvatar} size="md" />
+      </div>
+      <h1 class="text-5xl mb-4">Penulis: {authorName}</h1>
+      {authorBio && (
+        <p class="mx-auto mb-4 max-w-2xl text-lg leading-relaxed text-gray-500">
+          {authorBio}
+        </p>
+      )}
+      <p class="text-xl text-gray-500">
+        {posts.length} {posts.length === 1 ? 'catatan' : 'catatan'} oleh {authorName}
+      </p>
+    </header>
+
+    <PostList posts={formattedPosts} />
+
+    <div class="mt-12 text-center">
+      <a href="/journal" class="cta-button">
+        Lihat Semua Catatan
+      </a>
+    </div>
+  </div>
+</BaseLayout>

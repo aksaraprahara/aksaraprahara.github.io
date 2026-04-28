@@ -1,6 +1,8 @@
 ---
 import { formatDate } from '../utils/date';
 import { optimizeImagePath } from '../utils/optimizeImagePath';
+import AuthorBadge from './AuthorBadge.astro';
+import { getAuthorAvatar, getAuthorHref, getAuthorName } from '../utils/authors';
 
 interface Props {
   post: {
@@ -12,6 +14,7 @@ interface Props {
       excerpt: string;
       image?: string;
       tags?: string[];
+      author?: string;
     };
   };
   showImage?: boolean;
@@ -21,6 +24,9 @@ interface Props {
 
 const { post, showImage = true, showExcerpt = true, showTags = true } = Astro.props;
 const { title, date, excerpt, image, tags } = post.frontmatter;
+const authorName = getAuthorName(post.frontmatter);
+const authorAvatar = getAuthorAvatar(authorName);
+const authorHref = getAuthorHref(authorName);
 
 // Ensure image path is optimized
 const optimizedImagePath = image ? optimizeImagePath(image) : null;
@@ -40,6 +46,10 @@ const optimizedImagePath = image ? optimizeImagePath(image) : null;
       >
         {formatDate(date)}
       </time>
+    </div>
+
+    <div class="mb-3">
+      <AuthorBadge name={authorName} avatar={authorAvatar} href={authorHref} />
     </div>
     
     {showTags && tags && tags.length > 0 && (
@@ -81,9 +91,9 @@ const optimizedImagePath = image ? optimizeImagePath(image) : null;
           <a 
             href={post.url} 
             class="text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded px-2 py-1 inline-block"
-            aria-label={`Baca artikel ${title}`}
+            aria-label={`Baca catatan ${title}`}
           >
-            Baca artikel <span aria-hidden="true">→</span>
+            Baca catatan <span aria-hidden="true">→</span>
           </a>
         </div>
       </>

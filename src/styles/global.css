@@ -91,6 +91,30 @@
     @apply text-sm text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-sm;
   }
 
+  .author-badge {
+    @apply inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400;
+  }
+
+  .author-badge:hover {
+    @apply text-gray-900 dark:text-gray-100;
+  }
+
+  .author-badge-md {
+    @apply text-base;
+  }
+
+  .author-avatar {
+    @apply h-6 w-6 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-800;
+  }
+
+  .author-avatar-md {
+    @apply h-10 w-10;
+  }
+
+  .author-avatar-fallback {
+    @apply inline-flex items-center justify-center bg-gray-100 text-[11px] font-semibold text-gray-700 dark:bg-gray-900 dark:text-gray-200;
+  }
+
   .site-logo {
     @apply inline-flex items-center justify-center text-gray-950 transition-opacity hover:opacity-85 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-white;
   }
@@ -582,12 +606,17 @@ pre.astro-code {
 }
 
 .code-copy-button {
-  @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200/70 bg-white/80 text-gray-500 opacity-100 transition hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-700/70 dark:bg-gray-950/80 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:focus:ring-offset-gray-900;
+  @apply inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-xs font-medium text-gray-700 opacity-100 shadow-sm transition hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-gray-50 dark:focus:ring-offset-gray-900;
 }
 
 .code-copy-button svg {
   width: 0.875rem;
   height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.code-copy-button .code-copy-text {
+  @apply leading-none;
 }
 
 .code-copy-button .copied-icon {

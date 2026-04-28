@@ -15,17 +15,17 @@ const posts = sortedPosts.map(post => ({
 }));
 ---
 
-<BaseLayout title="Artikel">
-  <div class="max-w-3xl mx-auto">
+<BaseLayout title="Catatan">
+  <div class="max-w-4xl mx-auto">
     <header class="mb-12 text-center" transition:animate="fade">
-      <h1 class="text-5xl mb-4">Artikel</h1>
+      <h1 class="text-5xl mb-4">Catatan</h1>
       <p class="text-xl text-gray-500">
         Kumpulan catatan teknikal tentang Linux, container, monitoring, storage, dan operasional infrastruktur.
       </p>
     </header>
 
     <div transition:animate="fade">
-      <PostListWithThumbnails posts={posts} showTags={true} title="Semua Artikel" />
+      <PostListWithThumbnails posts={posts} showTags={true} title="Semua Catatan" />
     </div>
   </div>
 </BaseLayout>

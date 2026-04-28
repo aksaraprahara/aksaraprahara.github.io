@@ -1,0 +1,37 @@
+---
+import { getAuthorInitials } from '../utils/authors';
+
+interface Props {
+  name: string;
+  avatar?: string;
+  href?: string;
+  size?: 'sm' | 'md';
+}
+
+const { name, avatar = '', href, size = 'sm' } = Astro.props;
+const initials = getAuthorInitials(name);
+const wrapperClass = size === 'md' ? 'author-badge author-badge-md' : 'author-badge';
+const avatarClass = size === 'md' ? 'author-avatar author-avatar-md' : 'author-avatar';
+---
+
+{
+  href ? (
+    <a href={href} class={wrapperClass} aria-label={`Lihat semua catatan oleh ${name}`}>
+      {avatar ? (
+        <img src={avatar} alt="" aria-hidden="true" class={avatarClass} loading="lazy" decoding="async" />
+      ) : (
+        <span class={`${avatarClass} author-avatar-fallback`} aria-hidden="true">{initials}</span>
+      )}
+      <span>{name}</span>
+    </a>
+  ) : (
+    <div class={wrapperClass}>
+      {avatar ? (
+        <img src={avatar} alt="" aria-hidden="true" class={avatarClass} loading="lazy" decoding="async" />
+      ) : (
+        <span class={`${avatarClass} author-avatar-fallback`} aria-hidden="true">{initials}</span>
+      )}
+      <span>{name}</span>
+    </div>
+  )
+}
