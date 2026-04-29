@@ -17,8 +17,8 @@ const posts = sortedPosts.slice(0, 5).map(post => ({
 
 <BaseLayout title="Beranda">
   <div class="max-w-4xl mx-auto">
-    <section class="py-[8vh] text-left" transition:animate="fade">
-      <h1 class="mb-8 w-full max-w-4xl">
+    <section class="pb-[8vh] pt-0 text-left md:pt-2" transition:animate="fade">
+      <h1 class="-mt-2 mb-3 w-full max-w-4xl sm:-mt-4 sm:mb-4">
         <span class="sr-only">He was trembling like a soaked crow in the winter wind</span>
         <svg
           aria-hidden="true"
@@ -47,6 +47,17 @@ const posts = sortedPosts.slice(0, 5).map(post => ({
           />
         </svg>
       </h1>
+
+      <div class="mb-6 sm:mb-7">
+        <img
+          src="/images/home-top-artwork-banner.png"
+          alt=""
+          aria-hidden="true"
+          class="block w-full max-w-4xl h-auto object-contain"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
 
       <p class="mb-10 max-w-2xl text-lg italic leading-relaxed text-gray-500 md:text-2xl">
         De fleste mennesker lærer å redde seg selv ved kunstig å redusere sitt bevisshetsinnhold.

@@ -4,7 +4,7 @@ const AUTHOR_DIRECTORY = [
   {
     name: DEFAULT_AUTHOR_NAME,
     avatar: '/images/site-logo.png',
-    bio: 'Menulis catatan teknikal tentang Linux, container, observability, storage, virtualisasi, dan operasional infrastruktur.',
+    bio: 'Menulis catatan teknis seputar linux, container, observability, storage, virtualisasi, dan operasional infrastruktur.',
   },
   {
     name: 'Peter Wessel Zapffe',
