@@ -1,9 +1,12 @@
 ---
-title: "Contoh Catatan Harian"
+title: Contoh Catatan Harian
 date: 2026-04-23
-excerpt: "Catatan pendek pertama untuk section Tercatat Hidup Oleh Entitas Tak Terbatas."
-tags: [daily, example]
+excerpt: Catatan pendek pertama untuk section Tercatat Hidup Oleh Entitas Tak Terbatas.
+tags:
+  - daily
+  - example
 draft: false
+image: https://cdn-images-1.medium.com/max/1000/0*HAvhOE_csevQku3I
 ---
 
 Ini adalah contoh catatan pertama yang disimpan terpisah dari `src/content/posts/`.
