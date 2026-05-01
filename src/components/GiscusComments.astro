@@ -1,0 +1,94 @@
+---
+const giscusConfig = {
+  repo: 'aksaraprahara/aksaraprahara.github.io',
+  repoId: 'R_kgDOSJ1LhA',
+  category: 'Announcements',
+  categoryId: 'DIC_kwDOSJ1LhM4C7c0t',
+  mapping: 'pathname',
+  strict: '0',
+  reactionsEnabled: '1',
+  emitMetadata: '0',
+  inputPosition: 'bottom',
+  lang: 'en',
+  loading: 'lazy',
+};
+---
+
+<section class="max-w-3xl mx-auto mt-16 pt-10 border-t border-gray-200 dark:border-gray-800" aria-labelledby="comments-title">
+  <h2 id="comments-title" class="text-2xl font-semibold mb-6">Komentar</h2>
+  <div data-giscus-comments></div>
+</section>
+
+<script is:inline define:vars={{ giscusConfig }}>
+  const GISCUS_HOST = 'https://giscus.app';
+
+  function getGiscusTheme() {
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  }
+
+  function renderGiscusComments() {
+    document.querySelectorAll('[data-giscus-comments]').forEach((container) => {
+      if (container.dataset.giscusRendered === 'true') return;
+
+      container.innerHTML = '';
+
+      const script = document.createElement('script');
+      script.src = `${GISCUS_HOST}/client.js`;
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-repo', giscusConfig.repo);
+      script.setAttribute('data-repo-id', giscusConfig.repoId);
+      script.setAttribute('data-category', giscusConfig.category);
+      script.setAttribute('data-category-id', giscusConfig.categoryId);
+      script.setAttribute('data-mapping', giscusConfig.mapping);
+      script.setAttribute('data-strict', giscusConfig.strict);
+      script.setAttribute('data-reactions-enabled', giscusConfig.reactionsEnabled);
+      script.setAttribute('data-emit-metadata', giscusConfig.emitMetadata);
+      script.setAttribute('data-input-position', giscusConfig.inputPosition);
+      script.setAttribute('data-theme', getGiscusTheme());
+      script.setAttribute('data-lang', giscusConfig.lang);
+      script.setAttribute('data-loading', giscusConfig.loading);
+
+      container.appendChild(script);
+      container.dataset.giscusRendered = 'true';
+    });
+  }
+
+  function updateGiscusTheme() {
+    const iframe = document.querySelector('iframe.giscus-frame');
+    if (!iframe?.contentWindow) return;
+
+    iframe.contentWindow.postMessage(
+      {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(),
+          },
+        },
+      },
+      GISCUS_HOST,
+    );
+  }
+
+  function initGiscusComments() {
+    renderGiscusComments();
+    updateGiscusTheme();
+  }
+
+  initGiscusComments();
+
+  if (!window.__giscusCommentsBound) {
+    document.addEventListener('astro:after-swap', initGiscusComments);
+
+    const observer = new MutationObserver(() => {
+      updateGiscusTheme();
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    window.__giscusCommentsBound = true;
+  }
+</script>
