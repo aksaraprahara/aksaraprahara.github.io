@@ -14,6 +14,18 @@ const postsCollection = defineCollection({
   }),
 });
 
+const dailyNotesCollection = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/daily-notes' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.date(),
+    excerpt: z.string(),
+    tags: z.array(z.string()).default([]),
+    draft: z.boolean().default(false),
+  }),
+});
+
 export const collections = {
   posts: postsCollection,
+  dailyNotes: dailyNotesCollection,
 };

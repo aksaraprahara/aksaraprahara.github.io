@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/date';
+import { getVisibleDailyNotes } from '../../utils/daily-notes';
+
+const sectionPath = '/Tercatat-Hidup-Oleh-Entitas-Tak-Terbatas';
+const notes = getVisibleDailyNotes(await getCollection('dailyNotes'));
+const noteCards = notes.map((note) => ({
+  slug: note.id,
+  title: note.data.title,
+  excerpt: note.data.excerpt,
+  date: note.data.date,
+  tags: note.data.tags || [],
+  url: `${sectionPath}/${note.id}`,
+}));
+const searchIndexUrl = `${sectionPath}/search-index.json`;
+---
+
+<BaseLayout
+  title="Tercatat Hidup Oleh Entitas Tak Terbatas"
+  description="Kumpulan catatan ringkas yang dipisahkan dari catatan utama, dengan pencarian sendiri."
+  pagefindBody={false}
+>
+  <div class="max-w-4xl mx-auto">
+    <header class="mb-12 text-center" transition:animate="fade">
+      <h1 class="text-5xl mb-4">Tercatat Hidup Oleh Entitas Tak Terbatas</h1>
+      <p class="mx-auto max-w-2xl text-xl text-gray-500">
+        Halaman ini memuat catatan harian atau fragmen pendek yang dipisahkan dari kumpulan catatan utama.
+      </p>
+    </header>
+
+    <section class="mb-10" transition:animate="fade">
+      <label for="daily-note-search" class="sr-only">Cari catatan harian</label>
+      <input
+        id="daily-note-search"
+        type="search"
+        placeholder="Cari catatan di halaman ini"
+        data-daily-note-search-input
+        data-search-index-url={searchIndexUrl}
+      />
+      <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+        Pencarian di sini hanya membaca index catatan pada section ini, tidak tercampur dengan section catatan utama.
+      </p>
+    </section>
+
+    <section aria-labelledby="daily-notes-title" transition:animate="fade">
+      <div class="mb-6 flex items-center justify-between gap-4">
+        <h2 id="daily-notes-title" class="text-2xl font-semibold">Daftar Catatan</h2>
+        <p class="text-sm text-gray-500" data-daily-note-count>{noteCards.length} catatan</p>
+      </div>
+
+      <div class="border-b border-gray-200 dark:border-gray-800" data-daily-note-results>
+        {noteCards.map((note) => (
+          <article
+            class="border-t border-gray-200 py-5 dark:border-gray-800"
+            data-note-card
+            data-note-slug={note.slug}
+            data-searchable={`${note.title} ${note.excerpt} ${(note.tags || []).join(' ')}`.toLowerCase()}
+          >
+            <div class="mb-2 text-sm text-gray-500">{formatDate(note.date)}</div>
+            <h3 class="mt-0 mb-2 text-2xl md:text-3xl">
+              <a href={note.url} class="text-gray-900 hover:underline dark:text-gray-100">{note.title}</a>
+            </h3>
+            <p class="mb-3 text-gray-500">{note.excerpt}</p>
+            {note.tags.length > 0 && (
+              <div class="mb-3 flex flex-wrap gap-2" aria-label="Daily note tags">
+                {note.tags.map((tag) => (
+                  <a href={`${sectionPath}/tags/${tag}`} class="tag" aria-label={`Lihat semua catatan dengan tag ${tag}`}>
+                    {tag}
+                  </a>
+                ))}
+              </div>
+            )}
+            <a href={note.url} class="text-sm font-medium hover:underline">Baca catatan <span aria-hidden="true">→</span></a>
+          </article>
+        ))}
+      </div>
+
+      <p class="hidden py-8 text-center text-gray-500" data-daily-note-empty>
+        Tidak ada catatan yang cocok.
+      </p>
+    </section>
+  </div>
+
+  <script is:inline>
+    function initDailyNoteSearch() {
+      const input = document.querySelector('[data-daily-note-search-input]');
+      const cards = Array.from(document.querySelectorAll('[data-note-card]'));
+      const emptyState = document.querySelector('[data-daily-note-empty]');
+      const count = document.querySelector('[data-daily-note-count]');
+
+      if (!input || cards.length === 0 || !emptyState || !count) return;
+      if (input.dataset.bound === 'true') return;
+
+      const indexUrl = input.getAttribute('data-search-index-url');
+      let searchIndex = null;
+
+      async function loadIndex() {
+        if (searchIndex || !indexUrl) return searchIndex;
+        const response = await fetch(indexUrl);
+        searchIndex = await response.json();
+        return searchIndex;
+      }
+
+      const update = async () => {
+        const query = input.value.trim().toLowerCase();
+
+        let visibleSlugs = null;
+        if (query) {
+          const index = await loadIndex();
+          visibleSlugs = new Set(
+            (index || [])
+              .filter((note) => note.searchable.includes(query))
+              .map((note) => note.slug),
+          );
+        }
+
+        let visibleCount = 0;
+
+        cards.forEach((card) => {
+          const slug = card.getAttribute('data-note-slug') || '';
+          const visible = !query || visibleSlugs?.has(slug);
+          card.classList.toggle('hidden', !visible);
+          if (visible) visibleCount += 1;
+        });
+
+        emptyState.classList.toggle('hidden', visibleCount !== 0);
+        count.textContent = `${visibleCount} catatan`;
+      };
+
+      input.addEventListener('input', update);
+      input.dataset.bound = 'true';
+    }
+
+    initDailyNoteSearch();
+    document.addEventListener('astro:after-swap', initDailyNoteSearch);
+  </script>
+</BaseLayout>

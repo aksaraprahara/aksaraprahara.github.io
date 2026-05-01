@@ -51,3 +51,9 @@ docker ps
 ```
 
 Dengan port mapping `80:80`, service Nginx dalam container bisa diakses dari host melalui port 80. Pendekatan ini cocok untuk memahami alur dasar build image, copy file ke container, dan menjalankan service sebagai proses utama.
+
+## Video Referensi Uji Embed
+
+Kalau auto-embed YouTube aktif, link tunggal di bawah ini akan berubah menjadi preview video yang bisa diputar langsung di dalam halaman.
+
+https://www.youtube.com/watch?v=dQw4w9WgXcQ

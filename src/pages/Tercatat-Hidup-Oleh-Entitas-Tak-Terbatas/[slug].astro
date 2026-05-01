@@ -1,0 +1,38 @@
+---
+import { getCollection, render } from 'astro:content';
+import DailyNoteLayout from '../../layouts/DailyNoteLayout.astro';
+import { getVisibleDailyNotes } from '../../utils/daily-notes';
+
+export async function getStaticPaths() {
+  const sectionPath = '/Tercatat-Hidup-Oleh-Entitas-Tak-Terbatas';
+  const notes = getVisibleDailyNotes(await getCollection('dailyNotes'));
+
+  return notes.map((entry, index) => {
+    const prevNote = notes[index - 1]
+      ? {
+          url: `${sectionPath}/${notes[index - 1].id}`,
+          title: notes[index - 1].data.title,
+        }
+      : null;
+
+    const nextNote = notes[index + 1]
+      ? {
+          url: `${sectionPath}/${notes[index + 1].id}`,
+          title: notes[index + 1].data.title,
+        }
+      : null;
+
+    return {
+      params: { slug: entry.id },
+      props: { entry, prevNote, nextNote },
+    };
+  });
+}
+
+const { entry, prevNote, nextNote } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<DailyNoteLayout frontmatter={entry.data} prevNote={prevNote} nextNote={nextNote}>
+  <Content />
+</DailyNoteLayout>

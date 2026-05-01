@@ -4,6 +4,83 @@ import pagefind from 'astro-pagefind';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
+function extractYouTubeId(urlString) {
+  try {
+    const url = new URL(urlString);
+    const host = url.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      return url.pathname.split('/').filter(Boolean)[0] || null;
+    }
+
+    if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+      if (url.pathname === '/watch') {
+        return url.searchParams.get('v');
+      }
+
+      const segments = url.pathname.split('/').filter(Boolean);
+      if (segments[0] === 'embed' || segments[0] === 'shorts') {
+        return segments[1] || null;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function extractStandaloneUrl(node) {
+  if (!node || node.type !== 'paragraph' || !Array.isArray(node.children)) {
+    return null;
+  }
+
+  const meaningfulChildren = node.children.filter(
+    (child) => !(child.type === 'text' && child.value.trim() === ''),
+  );
+
+  if (meaningfulChildren.length !== 1) {
+    return null;
+  }
+
+  const [child] = meaningfulChildren;
+
+  if (child.type === 'link') {
+    return child.url;
+  }
+
+  if (child.type === 'text') {
+    return child.value.trim();
+  }
+
+  return null;
+}
+
+function remarkAutoEmbedYouTube() {
+  return (tree) => {
+    function transform(node) {
+      if (!node || !Array.isArray(node.children)) return;
+
+      node.children = node.children.map((child) => {
+        const standaloneUrl = extractStandaloneUrl(child);
+        const videoId = standaloneUrl ? extractYouTubeId(standaloneUrl) : null;
+
+        if (videoId) {
+          return {
+            type: 'html',
+            value: `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`,
+          };
+        }
+
+        transform(child);
+        return child;
+      });
+    }
+
+    transform(tree);
+  };
+}
+
 const repository = process.env.GITHUB_REPOSITORY?.split('/')[1];
 const repositoryOwner = process.env.GITHUB_REPOSITORY_OWNER;
 const envOrUndefined = (value) => (value && value.trim() ? value.trim() : undefined);
@@ -48,6 +125,7 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
   markdown: {
+    remarkPlugins: [remarkAutoEmbedYouTube],
     shikiConfig: {
       themes: {
         light: 'github-light',
