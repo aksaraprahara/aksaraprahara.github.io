@@ -29,6 +29,7 @@ const {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = image.startsWith('/') ? new URL(image, Astro.site) : image;
 const siteName = "Yudi Putra Wiratama";
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID || '';
 
 // Strukturierte Daten (JSON-LD) für bessere SEO
 const jsonLDWebsite = {
@@ -97,6 +98,43 @@ const jsonLD = type === 'article' && jsonLDArticle ? jsonLDArticle : jsonLDWebsi
       // Re-apply after view transitions
       document.addEventListener('astro:after-swap', applyTheme);
     </script>
+
+    {
+      gaMeasurementId && (
+        <>
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+          <script is:inline define:vars={{ gaMeasurementId }}>
+            window.dataLayer = window.dataLayer || [];
+
+            function gtag() {
+              window.dataLayer.push(arguments);
+            }
+
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', gaMeasurementId, { send_page_view: false });
+
+            function trackPageView() {
+              const pagePath = `${window.location.pathname}${window.location.search}`;
+
+              if (window.__lastTrackedGaPath === pagePath) {
+                return;
+              }
+
+              window.__lastTrackedGaPath = pagePath;
+              gtag('event', 'page_view', {
+                page_title: document.title,
+                page_location: window.location.href,
+                page_path: pagePath,
+              });
+            }
+
+            window.addEventListener('load', trackPageView, { once: true });
+            document.addEventListener('astro:page-load', trackPageView);
+          </script>
+        </>
+      )
+    }
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content={type} />
